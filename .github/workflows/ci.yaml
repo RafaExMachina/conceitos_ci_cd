@@ -35,7 +35,7 @@ jobs:
 
       - name: Analise Notebooks
         run: |
-          nbstripout --verify explorer.ipynb || (echo "ERRO:Notebook com outputs, limpe antes de commitar" && exit code 10)0
+          nbstripout --verify explorer.ipynb || (echo "ERRO:Notebook com outputs, limpe antes de commitar" && exit code 1)
 
       - name: Instalar o Ruff (Linter)
         run: pip install ruff
