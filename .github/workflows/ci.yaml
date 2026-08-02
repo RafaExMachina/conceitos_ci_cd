@@ -1,0 +1,31 @@
+#worflow
+name: CI - MLOps
+
+#conditions
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+#variaveis
+env:
+  PYTHON_VERSION: "3.10"
+
+
+#jobs
+jobs:
+  validate_env:   
+    runs-on: ubuntu-latest  
+
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run script validation
+        run: python validate_env.py
