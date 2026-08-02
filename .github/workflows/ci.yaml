@@ -22,6 +22,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Install Poetry
+        run: pip install poetry
+
       - name: Install Python
         uses: actions/setup-python@v6
         with:
@@ -43,9 +46,6 @@ jobs:
       
       - name: Executar Linter
         run: ruff check .
-
-      - name: Install Poetry
-        run: pip install poetry
 
       - name: install dependecias - poetry
         run: poetry install   
