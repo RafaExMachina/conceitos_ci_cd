@@ -38,6 +38,7 @@ jobs:
           path: dataset_processado.csv
   
   treinamento:
+    needs: preparando-dados
     runs-on: ubuntu-latest
     steps:  
       - name: Checkout
