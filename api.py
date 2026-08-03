@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-
 app = FastAPI(title="Anti-Fraud ML API")
-
 
 # O Contrato de Entrada (Payload)
 class Transacao(BaseModel):
