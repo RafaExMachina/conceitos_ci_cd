@@ -1,0 +1,51 @@
+#worflow
+name: CI - MLOps
+
+#conditions
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+#variaveis
+env:
+  PYTHON_VERSION: "3.10"
+
+
+#jobs
+jobs:
+  validate_env:   
+    runs-on: ubuntu-latest  
+
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'poetry'
+
+      - name: Run script validation
+        run: python validate_env.py
+
+      - name: Install nbstripout
+        run: pip install nbstripout
+
+      - name: Analise Notebooks
+        run: |
+          nbstripout --verify explorer.ipynb || (echo "ERRO:Notebook com outputs, limpe antes de commitar" && exit code 1)
+
+      - name: Instalar o Ruff (Linter)
+        run: pip install ruff
+      
+      - name: Executar Linter
+        run: ruff check .
+
+      - name: install dependecias - poetry
+        run: poetry install   
