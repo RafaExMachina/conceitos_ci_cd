@@ -62,4 +62,5 @@ jobs:
         run: poetry run python dummy_train_governance.py 
       
       - name: Tests (Pytest)
-        run: poetry run pytest tests/ -v
+        run: poetry poetry run python -m pytest tests/ -v
+        
