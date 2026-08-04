@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+
+metadata:
+  name: anti-fraud-api
+
+spec:
+  hosts:
+    - api.minhaempresa.com
+
+  http:
+    - route:
+        # 90% do tráfego vai para o modelo antigo e estável
+        - destination:
+            host: anti-fraud-service
+            subset: v1-stable
+          weight: 90
+
+        # 10% do tráfego vai para o modelo novo treinado pelo nosso pipeline
+        - destination:
+            host: anti-fraud-service
+            subset: v2-canary
+          weight: 10

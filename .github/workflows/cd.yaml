@@ -1,4 +1,4 @@
-name: CD - Build and Push Docker Image
+name: CD - Build, Push and Deploy
 
 on:
   push:
@@ -18,14 +18,21 @@ jobs:
       packages: write
       id-token: write
 
+    outputs:
+      image_name: ${{ steps.image.outputs.image_name }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Converter nome da imagem para minúsculo
+        id: image
         shell: bash
         run: |
-          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          IMAGE_NAME="${GITHUB_REPOSITORY,,}"
+
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> "$GITHUB_ENV"
+          echo "image_name=${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Autenticar na AWS com OIDC
         uses: aws-actions/configure-aws-credentials@v6
@@ -35,6 +42,7 @@ jobs:
           role-session-name: GitHubActions-${{ github.run_id }}
 
       - name: Validar identidade AWS
+        shell: bash
         run: |
           echo "Testando conexão com a AWS..."
           aws sts get-caller-identity
@@ -54,3 +62,65 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy-production:
+    name: Deploy em produção
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    environment:
+      name: production
+      url: https://fiap.com.br
+
+    env:
+      IMAGE_NAME: ${{ needs.build-and-push.outputs.image_name }}
+      MODEL_TAG: ${{ github.sha }}
+      API_ENV: production
+      LOG_LEVEL: WARNING
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Verificar manifesto Kubernetes
+        shell: bash
+        run: |
+          test -f k8s/deployment.yaml || {
+            echo "ERRO: k8s/deployment.yaml não foi encontrado."
+            exit 1
+          }
+
+      - name: Atualizar imagem do deployment Kubernetes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sed -i \
+            "s|image: nginx:.*|image: ${REGISTRY}/${IMAGE_NAME}:${MODEL_TAG}|" \
+            k8s/deployment.yaml
+
+          sed -i \
+            "s|API_ENV_PLACEHOLDER|${API_ENV}|g" \
+            k8s/deployment.yaml
+
+          sed -i \
+            "s|LOG_LEVEL_PLACEHOLDER|${LOG_LEVEL}|g" \
+            k8s/deployment.yaml
+
+      - name: Deploy - Production
+        shell: bash
+        run: |
+          echo "Arquivo YAML atualizado que será enviado para a nuvem:"
+          echo
+
+          cat k8s/deployment.yaml
+
+          echo
+          echo "Imagem configurada:"
+          echo "${REGISTRY}/${IMAGE_NAME}:${MODEL_TAG}"
+
+          echo
+          echo "Simulação de deploy executada com sucesso."
