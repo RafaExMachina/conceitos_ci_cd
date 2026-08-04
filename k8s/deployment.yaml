@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: mlops-deploy
+  namespace: mlops
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: mlops
+
+  template:
+    metadata:
+      labels:
+        app: mlops
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+
+            limits:
+              cpu: 150m
+              memory: 382Mi
+
+          ports:
+            - containerPort: 80
