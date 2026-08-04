@@ -44,11 +44,11 @@ jobs:
       - name: AWS Auth (OIDC)
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
-          audience: sts.amazonaws.com.cn
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::977419190406:role/OIDCGithubActionsRole
+          role-session-name: GitHubActions-${{ github.run_id }}
 
-      - name: Validar identidade (AWS <> OIDC)
+      - name: Validar identidade AWS
         run: |
           echo "Testando conexão com a AWS..."
           aws sts get-caller-identity
