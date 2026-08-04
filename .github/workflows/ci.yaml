@@ -49,3 +49,17 @@ jobs:
 
       - name: install dependecias - poetry
         run: poetry install   
+
+      - name: Rodar script preparando-dados.py
+        run: poetry run python preparando_dados.py  
+
+      - name: Dummy Training
+        run: poetry run python dummy_train.py 
+
+      - name: Dummy Training Governance       
+        env: 
+         GITHUB_SHA: ${{ github.sha }}         
+        run: poetry run python dummy_train_governance.py 
+      
+      - name: Tests (Pytest)
+        run: poetry run python -m pytest tests/ -v
