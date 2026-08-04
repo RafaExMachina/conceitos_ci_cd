@@ -10,6 +10,7 @@ env:
 
 jobs:
   build-and-push:
+    name: Build, Push e AWS OIDC
     runs-on: ubuntu-latest
 
     permissions:
@@ -26,6 +27,18 @@ jobs:
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
+      - name: Autenticar na AWS com OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::977419190406:role/OIDCGithubActionsRole
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Validar identidade AWS
+        run: |
+          echo "Testando conexão com a AWS..."
+          aws sts get-caller-identity
+
       - name: Login no GitHub Container Registry
         uses: docker/login-action@v4
         with:
@@ -40,58 +53,4 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-      - name: Diagnosticar claims do token OIDC
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          RESPONSE=$(curl --silent --show-error \
-            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
-
-          TOKEN=$(echo "$RESPONSE" | python -c \
-            'import json, sys; print(json.load(sys.stdin)["value"])')
-
-          export TOKEN
-
-          python - <<'PY'
-          import base64
-          import json
-          import os
-
-          token = os.environ["TOKEN"]
-
-          payload = token.split(".")[1]
-          payload += "=" * (-len(payload) % 4)
-
-          claims = json.loads(
-              base64.urlsafe_b64decode(payload).decode()
-          )
-
-          campos = [
-              "iss",
-              "aud",
-              "sub",
-              "repository",
-              "repository_id",
-              "repository_owner",
-              "repository_owner_id",
-              "ref",
-          ]
-
-          for campo in campos:
-              print(f"{campo}: {claims.get(campo)}")
-          PY
-
-      - name: AWS Auth (OIDC)
-        uses: aws-actions/configure-aws-credentials@v6.1.0
-        with:
-          aws-region: us-east-1
-          role-to-assume: arn:aws:iam::977419190406:role/OIDCGithubActionsRole
-          role-session-name: GitHubActions-${{ github.run_id }}
-
-      - name: Validar identidade AWS
-        run: |
-          echo "Testando conexão com a AWS..."
-          aws sts get-caller-identity
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
