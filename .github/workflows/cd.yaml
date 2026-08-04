@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout
@@ -39,3 +40,15 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: AWS Auth (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          audience: sts.amazonaws.com.cn
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::977419190406:role/OIDCGithubActionsRole
+
+      - name: Validar identidade (AWS <> OIDC)
+        run: |
+          echo "Testando conexão com a AWS..."
+          aws sts get-caller-identity
