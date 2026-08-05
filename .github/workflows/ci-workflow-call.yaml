@@ -12,4 +12,4 @@ jobs:
       versao-python: "3.10"
       path-tests: "tests/"
     secrets:
-      TOKEN_NUVEM: ${ { secrets.TOKEN_NUVEM } }
+      TOKEN_NUVEM: ${{ secrets.TOKEN_NUVEM }}
