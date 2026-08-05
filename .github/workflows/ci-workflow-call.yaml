@@ -1,0 +1,20 @@
+name: CI Workflow Call
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci-workflow-call:
+    permissions:
+      contents: read
+
+    uses: RafaExMachina/conceitos_ci_cd_devops/.github/workflows/template-ci-ml.yaml@main
+
+    with:
+      versao-python: "3.10"
+      path-tests: "tests/"
+
+    secrets:
+      TOKEN_NUVEM: ${{ secrets.TOKEN_NUVEM }}
